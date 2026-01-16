@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { User, Role } = require('../models');
+const { User, Role, RefreshToken } = require('../models');
 const { createAccessToken, createRefreshToken } = require('../utils/jwt');
 
 // -------------------------
@@ -10,7 +10,6 @@ exports.register = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validación básica
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
     }
@@ -19,13 +18,11 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'Password must be at least 8 characters' });
     }
 
-    // Verificar si existe
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(409).json({ message: 'Email already registered' });
     }
 
-    // Rol por defecto: student
     const studentRole = await Role.findOne({ where: { name: 'student' } });
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -71,12 +68,19 @@ exports.login = async (req, res) => {
     const accessToken = createAccessToken({ userId: user.id });
     const refreshToken = createRefreshToken({ userId: user.id });
 
+    // Guardar refresh token en BD
+    await RefreshToken.create({
+      token: refreshToken,
+      user_id: user.id,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
     // Guardar refresh token en cookie segura
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // en local = false
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return res.json({
@@ -91,7 +95,7 @@ exports.login = async (req, res) => {
 // -------------------------
 // REFRESH TOKEN
 // -------------------------
-exports.refreshToken = (req, res) => {
+exports.refreshToken = async (req, res) => {
   try {
     const token = req.cookies.refreshToken;
 
@@ -99,6 +103,19 @@ exports.refreshToken = (req, res) => {
       return res.status(401).json({ message: 'Refresh token missing' });
     }
 
+    // Verificar que existe en BD y no está revocado
+    const storedToken = await RefreshToken.findOne({
+      where: {
+        token,
+        revoked_at: null,
+      },
+    });
+
+    if (!storedToken) {
+      return res.status(401).json({ message: 'Refresh token revoked' });
+    }
+
+    // Verificar firma JWT
     const payload = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
 
     const accessToken = createAccessToken({ userId: payload.userId });
@@ -106,5 +123,27 @@ exports.refreshToken = (req, res) => {
     return res.json({ accessToken });
   } catch (error) {
     return res.status(401).json({ message: 'Invalid refresh token' });
+  }
+};
+
+// -------------------------
+// LOGOUT
+// -------------------------
+exports.logout = async (req, res) => {
+  try {
+    const token = req.cookies.refreshToken;
+
+    if (token) {
+      await RefreshToken.update(
+        { revoked_at: new Date() },
+        { where: { token } }
+      );
+    }
+
+    res.clearCookie('refreshToken');
+
+    return res.json({ message: 'Logout successful' });
+  } catch (error) {
+    return res.status(500).json({ message: 'Internal server error' });
   }
 };
