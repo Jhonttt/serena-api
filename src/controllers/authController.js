@@ -131,16 +131,20 @@ exports.refreshToken = async (req, res) => {
 // -------------------------
 exports.logout = async (req, res) => {
   try {
-    const token = req.cookies.refreshToken;
+    const refreshToken = req.cookies.refreshToken;
 
-    if (token) {
+    if (refreshToken) {
       await RefreshToken.update(
-        { revoked_at: new Date() },
-        { where: { token } }
+        { revoked_at: new Date() },  
+        { where: { token: refreshToken } }
       );
     }
 
-    res.clearCookie('refreshToken');
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
 
     return res.json({ message: 'Logout successful' });
   } catch (error) {
