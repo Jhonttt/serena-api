@@ -3,6 +3,7 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors'); // <-- AÑADIR ESTO
 const authRoutes = require('./routes/authRoutes');
 const authenticate = require('./middleware/authMiddleware');
+const authorizeRole = require('./middleware/authorizeRole');
 
 const app = express();
 
@@ -25,5 +26,14 @@ app.get('/health', (req, res) => {
 app.get('/protected', authenticate, (req, res) => {
   res.json({ message: 'Access granted', userId: req.userId });
 });
+
+app.get(
+  '/admin',
+  authenticate,
+  authorizeRole(['admin']),
+  (req, res) => {
+    res.json({ message: 'Admin area' });
+  }
+);
 
 module.exports = app;

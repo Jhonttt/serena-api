@@ -54,7 +54,11 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({
+      where: { email },
+      include: [{ model: Role, as: 'role' }]
+    });
+
     if (!user || !user.is_active) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -65,7 +69,15 @@ exports.login = async (req, res) => {
     }
 
     // Crear tokens
-    const accessToken = createAccessToken({ userId: user.id });
+    const accessToken = jwt.sign(
+      {
+        userId: user.id,
+        role: user.role.name, // 👈 MUY IMPORTANTE
+      },
+      process.env.JWT_ACCESS_SECRET,
+      { expiresIn: process.env.JWT_ACCESS_EXPIRATION }
+    );
+
     const refreshToken = createRefreshToken({ userId: user.id });
 
     // Guardar refresh token en BD
@@ -135,7 +147,7 @@ exports.logout = async (req, res) => {
 
     if (refreshToken) {
       await RefreshToken.update(
-        { revoked_at: new Date() },  
+        { revoked_at: new Date() },
         { where: { token: refreshToken } }
       );
     }

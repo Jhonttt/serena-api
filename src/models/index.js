@@ -10,10 +10,12 @@ const RefreshToken = require('./RefreshToken'); // <-- IMPORTANTE
 
 // Role 1 ── N User
 Role.hasMany(User, {
+  as: 'users',
   foreignKey: 'role_id',
 });
 
 User.belongsTo(Role, {
+  as: 'role',            // 👈 NECESARIO
   foreignKey: 'role_id',
 });
 
