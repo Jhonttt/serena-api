@@ -5,10 +5,10 @@ import { createAccessToken } from "../libs/jwt.js";
 export const register = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ message: 'Email and password are required' });
+    if (!email || !password) return res.status(400).json(['Email and password are required']);
 
     const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) return res.status(409).json({ message: 'Email already registered' });
+    if (existingUser) return res.status(409).json(['Email already registered']);
 
     const studentRole = await Role.findOne({ where: { name: 'student' } });
     const passwordHash = await bcrypt.hash(password, 10);
@@ -29,7 +29,7 @@ export const register = async (req, res) => {
       user_id: userSaved.id,
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json(['Internal server error']);
   }
 };
 
