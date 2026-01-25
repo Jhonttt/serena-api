@@ -1,6 +1,6 @@
-require('dotenv').config();
-const bcrypt = require('bcrypt');
-const { sequelize, Role, User } = require('../models');
+import bcrypt from 'bcryptjs';
+import sequelize from '../db/connection.js';
+import { Role, User } from '../db/models/index.js';
 
 async function seed() {
   try {

@@ -1,9 +1,12 @@
-const express = require('express');
-const cookieParser = require('cookie-parser');
-const cors = require('cors'); // <-- AÑADIR ESTO
-const authRoutes = require('./routes/authRoutes');
-const authenticate = require('./middleware/authMiddleware');
-const authorizeRole = require('./middleware/authorizeRole');
+import express from "express";
+import morgan from "morgan";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+
+import { PORT } from "./config/config.js";
+import authRoutes from "./routes/auth.routes.js";
+import { authenticate } from "./middleware/authMiddleware.js";
+import { authorizeRole } from "./middleware/authorizeRole.js";
 
 const app = express();
 
@@ -13,7 +16,10 @@ app.use(cors({
   credentials: true,               // permitir cookies
 }));
 
+app.set("port", PORT);
+
 app.use(express.json());
+app.use(morgan("dev"));
 app.use(cookieParser());
 
 app.use('/auth', authRoutes);
@@ -24,16 +30,15 @@ app.get('/health', (req, res) => {
 
 // Ruta protegida con JWT
 app.get('/protected', authenticate, (req, res) => {
-  res.json({ message: 'Access granted', userId: req.userId });
+  res.json({ message: 'Access granted', id: req.id });
 });
 
 app.get(
   '/admin',
   authenticate,
-  authorizeRole(['admin']),
-  (req, res) => {
+  authorizeRole(['admin']), (req, res) => {
     res.json({ message: 'Admin area' });
   }
 );
 
-module.exports = app;
+export default app;

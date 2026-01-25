@@ -1,6 +1,6 @@
-const jwt = require('jsonwebtoken');
+import jwt from "jsonwebtoken";
 
-module.exports = function authenticate(req, res, next) {
+export function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
@@ -20,7 +20,7 @@ module.exports = function authenticate(req, res, next) {
     );
 
     req.user = {
-      id: decoded.userId,
+      id: decoded.id,
       role: decoded.role,
     };
 

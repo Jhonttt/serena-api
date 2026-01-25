@@ -1,9 +1,7 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+import sequelize from '../connection.js';
+import { DataTypes } from 'sequelize';
 
-const Role = sequelize.define(
-  'Role',
-  {
+const Role = sequelize.define('Role', {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
@@ -14,12 +12,11 @@ const Role = sequelize.define(
       allowNull: false,
       unique: true,
     },
-  },
-  {
+  }, {
     tableName: 'roles',
     timestamps: true,
     underscored: true,
   }
 );
 
-module.exports = Role;
+export default Role;
