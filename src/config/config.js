@@ -8,5 +8,5 @@ export const DB_PASS = process.env.DB_PASS;
 export const DB_HOST = process.env.DB_HOST;
 export const DB_DIALECT = process.env.DB_DIALECT;
 
-export const ACCES_TOKEN = process.env.JWT_ACCESS_SECRET;
-export const ACCES_EXPIRATION = process.env.JWT_ACCESS_EXPIRATION;
+export const TOKEN_SECRET = process.env.JWT_ACCESS_SECRET;
+export const TOKEN_EXPIRATION = process.env.JWT_ACCESS_EXPIRATION;

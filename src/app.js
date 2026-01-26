@@ -17,12 +17,11 @@ app.use(cors({
 }));
 
 app.set("port", PORT);
-
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(cookieParser());
 
-app.use('/auth', authRoutes);
+app.use('/api', authRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });

@@ -1,6 +1,9 @@
 import bcrypt from "bcryptjs";
 import { User, Role } from "../db/models/index.js";
 import { createAccessToken } from "../libs/jwt.js";
+import jwt from "jsonwebtoken";
+import { TOKEN_SECRET } from "../config/config.js";
+import { id } from "zod/locales";
 
 export const register = async (req, res) => {
   try {
@@ -36,16 +39,16 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ message: 'Email and password are required' });
+    if (!email || !password) return res.status(400).json(['Email and password are required']);
 
     const userFound = await User.findOne({
       where: { email },
       include: [{ model: Role, as: 'role' }]
     });
-    if (!userFound || !userFound.is_active) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!userFound || !userFound.is_active) return res.status(401).json(['Email is not valid']);
 
     const passwordValid = await bcrypt.compare(password, userFound.password_hash);
-    if (!passwordValid) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!passwordValid) return res.status(401).json(['Invalid password']);
 
     const token = await createAccessToken({ id: userFound.id });
 
@@ -55,7 +58,7 @@ export const login = async (req, res) => {
       token,
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json(['Internal server error']);
   }
 };
 
@@ -71,16 +74,34 @@ export const logout = async (req, res) => {
     //   sameSite: 'strict',
     // });
 
-    return res.json({ message: 'Logout successful' });
+    return res.json(['Logout successful']);
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json(['Internal server error']);
   }
 };
 
 export const profile = async (req, res) => {
   const userFound = await User.findByPk(req.user.id);
-  if (!userFound) return res.status(404).json({ message: 'User not found' });
-  
+  if (!userFound) return res.status(404).json(['User not found']);
+
   const role = await Role.findByPk(userFound.role_id);
   return res.json({ id: userFound.id, email: userFound.email, role: role.name });
+}
+
+export const verifyToken = async (req, res) => {
+  const { token } = req.cookies;
+
+  if (!token) return res.status(401).json(['No token provided']);
+
+  jwt.verify(token, TOKEN_SECRET, async (err, user) => {
+    if (err) return res.status(401).json(['Invalid token']);
+
+    const userFound = await User.findByPk(user.id);
+    if (!userFound) return res.status(404).json(['User not found']);
+
+    return res.json({
+      id: userFound.id,
+      email: userFound.email
+    })
+  });
 }
