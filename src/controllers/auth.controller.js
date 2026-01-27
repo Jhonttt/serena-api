@@ -1,14 +1,29 @@
 import bcrypt from "bcryptjs";
-import { User, Role } from "../db/models/index.js";
+import { User, Role, Student, Tutor } from "../db/models/index.js";
 import { createAccessToken } from "../libs/jwt.js";
 import jwt from "jsonwebtoken";
 import { TOKEN_SECRET } from "../config/config.js";
-import { id } from "zod/locales";
 
 export const register = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, firt_name, last_name, birth_day, is_adult, education_level } = req.body;
     if (!email || !password) return res.status(400).json(['Email and password are required']);
+    // if (!firt_name || !last_name || !birth_day || !is_adult || !education_level) return res.status(400).json(['All student fields are required']);
+    // if (is_adult == false) {
+    //   const { full_name, phone, relationship } = req.body;
+    //   if (!full_name || !phone || !relationship) return res.status(400).json(['All tutor fields are required']);
+
+    //   const existingTutor = await Tutor.findOne({ where: { full_name, phone, relationship } });
+    //   if (existingTutor) return res.status(409).json(['Tutor already registered']);
+      
+    //   const tutor = new Tutor({
+    //     full_name,
+    //     phone,
+    //     relationship,
+    //   });
+
+    //   const tutorSaved = await tutor.save();
+    // };
 
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) return res.status(409).json(['Email already registered']);
@@ -23,8 +38,24 @@ export const register = async (req, res) => {
       is_active: true,
     });
 
+  
+
     const userSaved = await user.save();
+
+
+
+
+
+
+
+
     const token = await createAccessToken({ id: userSaved.id });
+
+
+
+
+
+
 
     res.cookie("token", token);
     return res.status(201).json({
@@ -67,12 +98,6 @@ export const logout = async (req, res) => {
     res.cookie("token", "", {
       expires: new Date(0),
     })
-
-    // res.clearCookie('accessToken', {
-    //   httpOnly: true,
-    //   secure: process.env.NODE_ENV === 'production',
-    //   sameSite: 'strict',
-    // });
 
     return res.json(['Logout successful']);
   } catch (error) {

@@ -13,6 +13,7 @@ const app = express();
 // CORS CONFIG (OBLIGATORIO PARA LOGIN DESDE REACT)
 app.use(cors({
   origin: 'http://localhost:5173', // frontend
+  // origin: 'https://app.proyectoserena.org', // frontend
   credentials: true,               // permitir cookies
 }));
 
