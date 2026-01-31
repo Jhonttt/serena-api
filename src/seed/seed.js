@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import sequelize from '../db/connection.js';
 import { Role, User } from '../db/models/index.js';
 
-async function seed() {
+const runSeed = async () => {
   try {
     await sequelize.authenticate();
 
@@ -33,11 +33,11 @@ async function seed() {
     });
 
     console.log('Seed completed successfully');
-    process.exit(0);
+    // process.exit(0);
   } catch (error) {
     console.error('Seed error:', error);
-    process.exit(1);
+    // process.exit(1);
   }
 }
 
-seed();
+export default runSeed;

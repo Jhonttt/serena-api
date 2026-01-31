@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { User, Role, Student, Tutor } from "../db/models/index.js";
+import { User, Role, Student, Tutor, StudentTutor } from "../db/models/index.js";
 import { createAccessToken } from "../libs/jwt.js";
 import jwt from "jsonwebtoken";
 import { TOKEN_SECRET } from "../config/config.js";
@@ -8,22 +8,7 @@ export const register = async (req, res) => {
   try {
     const { email, password, first_name, last_name, birth_day, is_adult, education_level } = req.body;
     if (!email || !password) return res.status(400).json(['Email and password are required']);
-    // if (!first_name || !last_name || !birth_day || !is_adult || !education_level) return res.status(400).json(['All student fields are required']);
-    // if (is_adult == false) {
-    //   const { full_name, phone, relationship } = req.body;
-    //   if (!full_name || !phone || !relationship) return res.status(400).json(['All tutor fields are required']);
-
-    //   const existingTutor = await Tutor.findOne({ where: { full_name, phone, relationship } });
-    //   if (existingTutor) return res.status(409).json(['Tutor already registered']);
-      
-    //   const tutor = new Tutor({
-    //     full_name,
-    //     phone,
-    //     relationship,
-    //   });
-
-    //   const tutorSaved = await tutor.save();
-    // };
+    if (!first_name || !last_name || !birth_day || is_adult === undefined || !education_level) return res.status(400).json(['All student fields are required']);
 
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) return res.status(409).json(['Email already registered']);
@@ -38,24 +23,40 @@ export const register = async (req, res) => {
       is_active: true,
     });
 
-  
-
     const userSaved = await user.save();
 
+    const existingStudent = await Student.findOne({ where: { first_name, last_name }});
+    if (existingStudent) return res.status(409).json(["Student already registered"]);
 
+    const student = await Student.create({
+      user_id: userSaved.id,
+      first_name,
+      last_name,
+      is_adult,
+      education_level
+    });
 
+    if (is_adult === false) {
+      const { full_name, phone, relationship } = req.body;
+      if (!full_name || !phone || !relationship) return res.status(400).json(['All tutor fields are required']);
 
+      const existingTutor = await Tutor.findOne({ where: { full_name } });
+      if (existingTutor) return res.status(409).json(['Tutor already registered']);
+      
+      const tutor = new Tutor({
+        full_name,
+        phone,
+        relationship,
+      });
 
-
-
+      await StudentTutor.create({
+        student_id: student.id_student,
+        tutor_id: tutor.id_tutor,
+        is_primary: true,
+      });
+    };
 
     const token = await createAccessToken({ id: userSaved.id });
-
-
-
-
-
-
 
     res.cookie("token", token);
     return res.status(201).json({
