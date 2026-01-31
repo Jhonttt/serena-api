@@ -9,7 +9,7 @@ const Student = sequelize.define('Student', {
         unique: true,
     },
 
-    firt_name: {
+    first: {
         type: DataTypes.STRING(50),
         allowNull: false,
     },

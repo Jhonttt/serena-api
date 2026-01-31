@@ -6,9 +6,9 @@ import { TOKEN_SECRET } from "../config/config.js";
 
 export const register = async (req, res) => {
   try {
-    const { email, password, firt_name, last_name, birth_day, is_adult, education_level } = req.body;
+    const { email, password, first_name, last_name, birth_day, is_adult, education_level } = req.body;
     if (!email || !password) return res.status(400).json(['Email and password are required']);
-    // if (!firt_name || !last_name || !birth_day || !is_adult || !education_level) return res.status(400).json(['All student fields are required']);
+    // if (!first_name || !last_name || !birth_day || !is_adult || !education_level) return res.status(400).json(['All student fields are required']);
     // if (is_adult == false) {
     //   const { full_name, phone, relationship } = req.body;
     //   if (!full_name || !phone || !relationship) return res.status(400).json(['All tutor fields are required']);
