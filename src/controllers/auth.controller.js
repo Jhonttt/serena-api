@@ -174,9 +174,11 @@ export const login = async (req, res) => {
     const token = await createAccessToken({ id: userFound.id });
 
     res.cookie("token", token);
+    res.cookie("role", userFound.role.name);
     return res.json({
       message: "Login successful",
       token,
+      role: userFound.role.name,
     });
   } catch (error) {
     return res.status(500).json(["Internal server error"]);
