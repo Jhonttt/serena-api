@@ -87,7 +87,7 @@ Consent.belongsTo(Tutor, {
   foreignKey: 'tutor_id',
 });
 
-// User 1 ── 1 Psychologist
+// User 1 ── 1 Student
 User.hasOne(Student, {
   as: 'student',
   foreignKey: 'user_id',
@@ -97,6 +97,7 @@ Student.belongsTo(User, {
   as: 'user',
   foreignKey: 'user_id',
 });
+
 
 export {
   User,

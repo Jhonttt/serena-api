@@ -195,17 +195,32 @@ export const logout = async (req, res) => {
   }
 };
 
-export const profile = async (req, res) => {
-  const userFound = await User.findByPk(req.user.id);
-  if (!userFound) return res.status(404).json(["User not found"]);
+//Se a actualizado para que se muestre el nombre del usuario en el home
 
-  const role = await Role.findByPk(userFound.role_id);
-  return res.json({
-    id: userFound.id,
-    email: userFound.email,
-    role: role.name,
-  });
+export const profile = async (req, res) => {
+  try {
+    const userFound = await User.findByPk(req.user.id, {
+      include: [{ model: Student, as: 'student' }] // incluir Student
+    });
+
+    if (!userFound) return res.status(404).json(["User not found"]);
+
+    const role = await Role.findByPk(userFound.role_id);
+
+    return res.json({
+      id: userFound.id,
+      email: userFound.email,
+      role_name: role.name,
+      first_name: userFound.student?.first_name || null, // aquí ya estará disponible
+      last_name: userFound.student?.last_name || null,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json(["Internal server error"]);
+  }
 };
+
+
 
 export const verifyToken = async (req, res) => {
   const { token } = req.cookies;
