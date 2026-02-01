@@ -7,7 +7,7 @@ export const registerSchema = z.object({
   }),
   password: z.string({
     required_error: 'Password is required',
-  }).min(8, 'Password must be at least 8 characters long'),
+  }).min(8, 'La contraseña debe tener al menos 8 caracteres'),
   first_name: z.string({
     required_error: 'First name is required',
   }).min(1, 'First name cannot be empty'),
@@ -23,6 +23,9 @@ export const registerSchema = z.object({
   education_level: z.string({
     required_error: 'Education level is required',
   }),
+  full_name: z.string().optional(),
+  phone: z.string().optional(),
+  relationship: z.string().optional(),
 });
 
 export const loginSchema = z.object({

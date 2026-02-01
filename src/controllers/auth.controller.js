@@ -43,7 +43,7 @@ export const register = async (req, res) => {
     ========================= */
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser)
-      return res.status(409).json([{ path: "email", message: "Email ya registrado" }]);
+      return res.status(409).json(["Email ya registrado"]);
 
     const existingStudent = await Student.findOne({
       where: { first_name, last_name },
@@ -51,7 +51,7 @@ export const register = async (req, res) => {
     if (existingStudent)
       return res
         .status(409)
-        .json([{ path: "first_name", message: "Estudiante ya registrado" }]);
+        .json(["Estudiante ya registrado"]);
 
     const studentRole = await Role.findOne({ where: { name: "student" } });
 
@@ -100,7 +100,7 @@ export const register = async (req, res) => {
     if (!isAdult) {
       const existingTutor = await Tutor.findOne({ where: { full_name } });
       if (existingTutor)
-        return res.status(409).json([{ path: "full_name", message: "Tutor ya registrado" }]);
+        return res.status(409).json(["Tutor ya registrado"]);
 
       const tutorSaved = await Tutor.create(
         { full_name, phone, relationship },
@@ -140,7 +140,7 @@ export const register = async (req, res) => {
   } catch (error) {
     await transaction.rollback();
     console.error(error);
-    return res.status(500).json([{ message: "Error interno del servidor" }]);
+    return res.status(500).json(["Error interno del servidor"]);
   }
 };
 
