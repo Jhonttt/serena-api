@@ -36,6 +36,7 @@ export const register = async (req, res) => {
       full_name,
       phone,
       relationship,
+      psychological_issue,
     } = parsed.data;
 
     /* =========================
@@ -125,7 +126,7 @@ export const register = async (req, res) => {
     /* =========================
        9. Generar token
     ========================= */
-    const token = await createAccessToken({ id: userSaved.id });
+    const token = await createAccessToken({ id: userSaved.id, role_id: userSaved.role_id });
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -171,7 +172,7 @@ export const login = async (req, res) => {
     );
     if (!passwordValid) return res.status(401).json(["Invalid password"]);
 
-    const token = await createAccessToken({ id: userFound.id });
+    const token = await createAccessToken({ id: userFound.id, role_id: userFound.role_id });
 
     res.cookie("token", token);
     res.cookie("role", userFound.role.name);
@@ -212,7 +213,8 @@ export const profile = async (req, res) => {
     return res.json({
       id: userFound.id,
       email: userFound.email,
-      role_name: role.name,
+      role_id: userFound.role_id,
+      role_name: role?.name || null,
       first_name: userFound.student?.first_name || null, // aquí ya estará disponible
       last_name: userFound.student?.last_name || null,
     });
@@ -238,6 +240,7 @@ export const verifyToken = async (req, res) => {
     return res.json({
       id: userFound.id,
       email: userFound.email,
+      role_id: userFound.role_id,
     });
   });
 };

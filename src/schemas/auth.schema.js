@@ -1,38 +1,101 @@
-import {z} from 'zod';
-import { calculateAge } from '../utils/age.js';
+import { z } from "zod";
+import { calculateAge } from "../utils/age.js";
 
-export const registerSchema = z.object({
-  email: z.email({
-    required_error: 'Email is required',
-  }),
-  password: z.string({
-    required_error: 'Password is required',
-  }).min(8, 'La contraseña debe tener al menos 8 caracteres'),
-  first_name: z.string({
-    required_error: 'First name is required',
-  }).min(1, 'First name cannot be empty'),
-  last_name: z.string({
-    required_error: 'Last name is required',
-  }).min(1, 'Last name cannot be empty'),
-  birth_day: z.string({
-    required_error: 'Birth date is required',
-  }).refine((val) => {
-    let age = calculateAge(val);
-    return age >= 12;
-  }, { message: 'La edad mínima es 12 años' }),
-  education_level: z.string({
-    required_error: 'Education level is required',
-  }),
-  full_name: z.string().optional(),
-  phone: z.string().optional(),
-  relationship: z.string().optional(),
-});
+const esPhone = z
+  .string()
+  .optional()
+  .refine(
+    (val) => !val || /^(\+34)?[6789]\d{8}$/.test(val.replace(/\s+/g, "")),
+    { message: "Teléfono inválido" },
+  );
+
+const educationLevelSchema = z.enum(
+  ["primaria", "secundaria", "bachillerato", "universidad", "otro"],
+  { error: "Education level is required" },
+);
+
+const relationshipSchema = z.enum(
+  ["padre", "madre", "tutor_legal", "abuelo", "hermano_mayor", "otro"],
+  { error: "Relationship is required" },
+);
+
+export const registerSchema = z
+  .object({
+    email: z.email({
+      required_error: "Email is required",
+    }),
+    password: z
+      .string({
+        required_error: "Password is required",
+      })
+      .min(8, "La contraseña debe tener al menos 8 caracteres"),
+    first_name: z
+      .string({
+        required_error: "First name is required",
+      })
+      .min(1, "First name cannot be empty"),
+    last_name: z
+      .string({
+        required_error: "Last name is required",
+      })
+      .min(1, "Last name cannot be empty")
+      .refine((val) => val.trim().includes(" "), {
+        message: "Introduce ambos apellidos",
+      }),
+    birth_day: z
+      .string({
+        required_error: "Birth date is required",
+      })
+      .refine((val) => calculateAge(val) >= 12, {
+        message: "La edad mínima es 12 años",
+      }),
+    education_level: educationLevelSchema,
+
+    full_name: z.string().optional(),
+    phone: esPhone, // ✅ aquí usas el validador
+    relationship: relationshipSchema.optional(),
+    psychological_issue: z.string().max(150).optional(),
+  })
+  .superRefine((data, ctx) => {
+    const age = calculateAge(data.birth_day);
+
+    if (age < 18) {
+      // full_name obligatorio y con al menos un espacio
+      if (!data.full_name || data.full_name.trim() === "") {
+        ctx.addIssue({
+          path: ["full_name"],
+          message: "Nombre del tutor es obligatorio",
+        });
+      } else if (!data.full_name.trim().includes(" ")) {
+        ctx.addIssue({
+          path: ["full_name"],
+          message: "Nombre completo del tutor",
+        });
+      }
+
+      // phone obligatorio (y ya se valida formato por esPhone si viene)
+      if (!data.phone) {
+        ctx.addIssue({
+          path: ["phone"],
+          message: "Teléfono es obligatorio",
+        });
+      }
+
+      // relationship obligatorio
+      if (!data.relationship) {
+        ctx.addIssue({
+          path: ["relationship"],
+          message: "Relationship is required",
+        });
+      }
+    }
+  });
 
 export const loginSchema = z.object({
   email: z.email({
-    required_error: 'Email is required',
+    required_error: "Email is required",
   }),
   password: z.string({
-    required_error: 'Password is required',
-  })
-})
+    required_error: "Password is required",
+  }),
+});

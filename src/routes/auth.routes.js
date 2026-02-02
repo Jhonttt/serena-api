@@ -1,36 +1,189 @@
-import { Router } from 'express';
-import { register, login, logout, profile, verifyToken } from '../controllers/auth.controller.js';
-import { authRequired } from '../middleware/validateToken.js';
-import { validateSchema } from '../middleware/validator.middleware.js';
-import { registerSchema, loginSchema } from '../schemas/auth.schema.js';
-import Student from "../db/models/student.model.js";
+import { Router } from "express";
+import {
+  register,
+  login,
+  logout,
+  profile,
+  verifyToken,
+} from "../controllers/auth.controller.js";
+import { authRequired } from "../middleware/validateToken.js";
+import { validateSchema } from "../middleware/validator.middleware.js";
+import { registerSchema, loginSchema } from "../schemas/auth.schema.js";
+import { Student, User, Tutor, Role } from "../db/models/index.js";
 
 const router = Router();
 
-router.post('/register', validateSchema(registerSchema), register);
-router.post('/login', validateSchema(loginSchema), login);
-router.post('/logout', logout);
+router.post("/register", validateSchema(registerSchema), register);
+router.post("/login", validateSchema(loginSchema), login);
+router.post("/logout", logout);
 
 router.get("/verify", verifyToken);
-router.get('/profile', authRequired, profile);
+router.get("/profile", authRequired, profile);
 
-//Extraemos los datos del usuario
+// Extraemos los datos del estudiante con tutores
 router.get("/student", authRequired, async (req, res) => {
   try {
+    console.log("🔍 Buscando estudiante para user_id:", req.user.id);
+    console.log("Role ID del usuario:", req.user.role_id);
+
+    // Verificar que el usuario sea estudiante (role_id = 3)
+    if (req.user.role_id !== 3) {
+      console.log("❌ Usuario no es estudiante, role_id:", req.user.role_id);
+      return res.status(403).json({ 
+        message: "User is not a student",
+        role_id: req.user.role_id 
+      });
+    }
+    
     const student = await Student.findOne({
       where: { user_id: req.user.id },
-      attributes: ["first_name", "last_name"],
+      attributes: [
+        "id_student",
+        "user_id",
+        "first_name",
+        "last_name",
+        "birth_day",
+        "is_adult",
+        "education_level"
+      ],
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: ['email', 'is_active'],
+          required: false
+        },
+        {
+          model: Tutor,
+          as: 'tutors',
+          attributes: ['id_tutor', 'full_name', 'phone', 'relationship'],
+          through: { 
+            attributes: ['is_primary']
+          },
+          required: false
+        }
+      ]
     });
 
     if (!student) {
-      return res.status(404).json(["Student not found"]);
+      console.log("❌ No se encontró registro de estudiante para user_id:", req.user.id);
+      return res.status(404).json({ 
+        message: "Student profile not found"
+      });
     }
 
-    res.json(student);
+    console.log("✅ Estudiante encontrado:", student.toJSON());
+
+    // Formatear la respuesta
+    const response = {
+      id_student: student.id_student,
+      user_id: student.user_id,
+      first_name: student.first_name,
+      last_name: student.last_name,
+      full_name: `${student.first_name} ${student.last_name}`,
+      birth_day: student.birth_day,
+      is_adult: student.is_adult,
+      education_level: student.education_level,
+      email: student.user?.email || null,
+      is_active: student.user?.is_active || true,
+      tutors: student.tutors?.map(tutor => ({
+        id: tutor.id_tutor,
+        full_name: tutor.full_name,
+        phone: tutor.phone,
+        relationship: tutor.relationship,
+        is_primary: tutor.StudentTutor?.is_primary || false
+      })) || []
+    };
+
+    console.log("✅ Respuesta formateada:", response);
+
+    res.json(response);
   } catch (error) {
-    res.status(500).json(["Internal server error"]);
+    console.error("❌ Error completo:", error);
+    console.error("Stack:", error.stack);
+    res.status(500).json({ 
+      message: "Internal server error", 
+      error: error.message,
+      details: error.toString()
+    });
   }
 });
 
+// RUTA ADMIN con manejo de errores mejorado
+router.get("/admin", authRequired, async (req, res) => {
+  try {
+    console.log("🔍 Buscando admin para user_id:", req.user.id);
+    console.log("Role ID del usuario:", req.user.role_id);
+    
+    const admin = await User.findOne({
+      where: { id: req.user.id },
+      attributes: ["id", "email", "role_id", "is_active", "created_at"],
+      include: [
+        {
+          model: Role,
+          as: 'role',
+          attributes: ['id', 'name'],
+          required: false
+        }
+      ]
+    });
+
+    if (!admin) {
+      console.log("❌ No se encontró usuario con id:", req.user.id);
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    console.log("✅ Usuario encontrado:", admin.toJSON());
+
+    // Verificar si es admin (role_id = 1)
+    if (admin.role_id !== 1) {
+      console.log("❌ Usuario no es admin, role_id:", admin.role_id);
+      return res.status(403).json({ message: "User is not an admin" });
+    }
+
+    // Formatear la respuesta del admin
+    const response = {
+      user_id: admin.id,
+      email: admin.email,
+      role_id: admin.role_id,
+      role_name: admin.role?.name || 'Administrador',
+      is_active: admin.is_active,
+      created_at: admin.created_at,
+      display_name: admin.email.split('@')[0]
+    };
+
+    console.log("✅ Respuesta formateada:", response);
+
+    res.json(response);
+  } catch (error) {
+    console.error("❌ Error al obtener perfil de admin:", error);
+    res.status(500).json({ 
+      message: "Internal server error", 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
+// Endpoint para obtener el email de un usuario específico
+router.get("/user/:id", authRequired, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id, {
+      attributes: ["email", "is_active"],
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ 
+      email: user.email,
+      is_active: user.is_active
+    });
+  } catch (error) {
+    console.error("Error al obtener email:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 export default router;
