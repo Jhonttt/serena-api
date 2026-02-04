@@ -38,10 +38,7 @@ export const registerSchema = z
       .string({
         required_error: "Last name is required",
       })
-      .min(1, "Last name cannot be empty")
-      .refine((val) => val.trim().includes(" "), {
-        message: "Introduce ambos apellidos",
-      }),
+      .min(1, "Last name cannot be empty"),
     birth_day: z
       .string({
         required_error: "Birth date is required",
