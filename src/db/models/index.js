@@ -7,6 +7,7 @@ import HealthBackground from './HealthBackground.model.js';
 import StudentTutor from './studentTutor.model.js';
 import Student from './student.model.js';
 import Tutor from './tutor.model.js';
+import Resource from './resources.js';
 // -------------------------
 // Relaciones
 // -------------------------
@@ -99,6 +100,18 @@ Student.belongsTo(User, {
 });
 
 
+// Usuario 1 - N Recursos
+User.hasMany(Resource, {
+  foreignKey: 'user_id',
+  as: 'resources',
+});
+
+Resource.belongsTo(User, {
+  foreignKey: 'user_id',
+  as: 'user',
+});
+
+
 export {
   User,
   Role,
@@ -108,5 +121,6 @@ export {
   HealthBackground,
   Student,
   StudentTutor,
-  Tutor
+  Tutor,
+  Resource
 };
