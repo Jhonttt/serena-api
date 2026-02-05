@@ -1,5 +1,11 @@
 import bcrypt from "bcryptjs";
-import { User, Role, Student, Tutor, StudentTutor } from "../db/models/index.js";
+import {
+  User,
+  Role,
+  Student,
+  Tutor,
+  StudentTutor,
+} from "../db/models/index.js";
 import { createAccessToken } from "../libs/jwt.js";
 import jwt from "jsonwebtoken";
 import { TOKEN_SECRET } from "../config/config.js";
@@ -43,16 +49,13 @@ export const register = async (req, res) => {
        2. Comprobaciones previas
     ========================= */
     const existingUser = await User.findOne({ where: { email } });
-    if (existingUser)
-      return res.status(409).json(["Email ya registrado"]);
+    if (existingUser) return res.status(409).json(["Email ya registrado"]);
 
     const existingStudent = await Student.findOne({
       where: { first_name, last_name },
     });
     if (existingStudent)
-      return res
-        .status(409)
-        .json(["Estudiante ya registrado"]);
+      return res.status(409).json(["Estudiante ya registrado"]);
 
     const studentRole = await Role.findOne({ where: { name: "student" } });
 
@@ -100,8 +103,7 @@ export const register = async (req, res) => {
     ========================= */
     if (!isAdult) {
       const existingTutor = await Tutor.findOne({ where: { full_name } });
-      if (existingTutor)
-        return res.status(409).json(["Tutor ya registrado"]);
+      if (existingTutor) return res.status(409).json(["Tutor ya registrado"]);
 
       const tutorSaved = await Tutor.create(
         { full_name, phone, relationship },
@@ -126,7 +128,10 @@ export const register = async (req, res) => {
     /* =========================
        9. Generar token
     ========================= */
-    const token = await createAccessToken({ id: userSaved.id, role_id: userSaved.role_id });
+    const token = await createAccessToken({
+      id: userSaved.id,
+      role_id: userSaved.role_id,
+    });
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -161,7 +166,10 @@ export const login = async (req, res) => {
 
     const userFound = await User.findOne({
       where: { email },
-      include: [{ model: Role, as: "role" }],
+      include: [
+        { model: Role, as: "role" },
+        { model: Student, as: "student" },
+      ],
     });
     if (!userFound || !userFound.is_active)
       return res.status(401).json(["Email is not valid"]);
@@ -172,14 +180,28 @@ export const login = async (req, res) => {
     );
     if (!passwordValid) return res.status(401).json(["Invalid password"]);
 
-    const token = await createAccessToken({ id: userFound.id, role_id: userFound.role_id });
+    const token = await createAccessToken({
+      id: userFound.id,
+      role_id: userFound.role_id,
+    });
 
-    res.cookie("token", token);
-    res.cookie("role", userFound.role.name);
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: false,
+    });
+
     return res.json({
       message: "Login successful",
       token,
-      role: userFound.role.name,
+      user: {
+        id: userFound.id,
+        email: userFound.email,
+        role_id: userFound.role_id,
+        role_name: userFound.role.name,
+        first_name: userFound.student?.first_name || null,
+        last_name: userFound.student?.last_name || null,
+      },
     });
   } catch (error) {
     return res.status(500).json(["Internal server error"]);
@@ -188,12 +210,17 @@ export const login = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
+    // ✅ Eliminar la cookie estableciendo una fecha de expiración pasada
     res.cookie("token", "", {
+      httpOnly: true,
       expires: new Date(0),
+      sameSite: "lax",
+      secure: false,
     });
 
-    return res.json(["Logout successful"]);
+    return res.json({ message: "Logout successful" });
   } catch (error) {
+    console.error(error);
     return res.status(500).json(["Internal server error"]);
   }
 };
@@ -203,7 +230,7 @@ export const logout = async (req, res) => {
 export const profile = async (req, res) => {
   try {
     const userFound = await User.findByPk(req.user.id, {
-      include: [{ model: Student, as: 'student' }] // incluir Student
+      include: [{ model: Student, as: "student" }], // incluir Student
     });
 
     if (!userFound) return res.status(404).json(["User not found"]);
@@ -224,8 +251,6 @@ export const profile = async (req, res) => {
   }
 };
 
-
-
 export const verifyToken = async (req, res) => {
   const { token } = req.cookies;
 
@@ -234,13 +259,21 @@ export const verifyToken = async (req, res) => {
   jwt.verify(token, TOKEN_SECRET, async (err, user) => {
     if (err) return res.status(401).json(["Invalid token"]);
 
-    const userFound = await User.findByPk(user.id);
+    const userFound = await User.findByPk(user.id, {
+      include: [
+        { model: Role, as: "role" },
+        { model: Student, as: "student" },
+      ],
+    });
     if (!userFound) return res.status(404).json(["User not found"]);
 
     return res.json({
       id: userFound.id,
       email: userFound.email,
       role_id: userFound.role_id,
+      role_name: userFound.role.name || null,
+      first_name: userFound.student?.first_name || null,
+      last_name: userFound.student?.last_name || null,
     });
   });
 };
