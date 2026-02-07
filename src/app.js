@@ -5,6 +5,7 @@ import cors from "cors";
 
 import { PORT } from "./config/config.js";
 import authRoutes from "./routes/auth.routes.js";
+import resourceRoutes from "./routes/resources.routes.js";
 import { authenticate } from "./middleware/authMiddleware.js";
 import { authorizeRole } from "./middleware/authorizeRole.js";
 
@@ -23,6 +24,7 @@ app.use(morgan("dev"));
 app.use(cookieParser());
 
 app.use('/api', authRoutes);
+app.use('/api/resources',resourceRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
