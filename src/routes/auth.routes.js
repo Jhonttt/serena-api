@@ -20,6 +20,49 @@ router.post("/logout", logout);
 router.get("/verify", verifyToken);
 router.get("/profile", authRequired, profile);
 
+// =========================
+// HOME DEL ESTUDIANTE
+// =========================
+router.get("/home", authRequired, async (req, res) => {
+  try {
+    // Solo estudiantes
+    if (req.user.role_id !== 3) {
+      return res.status(403).json({ message: "User is not a student" });
+    }
+
+    const student = await Student.findOne({
+      where: { user_id: req.user.id },
+      include: {
+        association: "progress",
+      },
+    });
+
+    if (!student || !student.progress) {
+      return res.status(404).json({ message: "Student progress not found" });
+    }
+
+    // 👉 Devolvemos SOLO el progreso
+    return res.json({
+      breathing_done: student.progress.breathing_done,
+      breathing_total: student.progress.breathing_total,
+
+      diary_done: student.progress.diary_done,
+      diary_total: student.progress.diary_total,
+
+      meditation_done: student.progress.meditation_done,
+      meditation_total: student.progress.meditation_total,
+
+      streak_days: student.progress.streak_days,
+      sessions_completed: student.progress.sessions_completed,
+      total_progress: student.progress.total_progress,
+    });
+  } catch (error) {
+    console.error("❌ Error Home:", error);
+    res.status(500).json({ message: "Error loading home data" });
+  }
+});
+
+
 // Extraemos los datos del estudiante con tutores
 router.get("/student", authRequired, async (req, res) => {
   try {

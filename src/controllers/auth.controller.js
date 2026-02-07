@@ -12,6 +12,8 @@ import { TOKEN_SECRET } from "../config/config.js";
 import sequelize from "../db/connection.js"; // para transacción
 import { calculateAge } from "../utils/age.js";
 import { registerSchema, loginSchema } from "../schemas/auth.schema.js"; // importa tu Zod schema
+import { StudentProgress } from "../db/models/index.js"; //importa el Progreso del estudiante
+
 
 export const register = async (req, res) => {
   const transaction = await sequelize.transaction();
@@ -97,6 +99,17 @@ export const register = async (req, res) => {
       },
       { transaction },
     );
+    
+    /* =========================
+     6.1 Crear progreso del estudiante
+  ========================= */
+    await StudentProgress.create(
+      {
+        student_id: studentSaved.id_student,
+      },
+      { transaction },
+    );
+
 
     /* =========================
        7. Crear tutor si menor

@@ -8,6 +8,7 @@ import StudentTutor from './studentTutor.model.js';
 import Student from './student.model.js';
 import Tutor from './tutor.model.js';
 import Resource from './resources.js';
+import StudentProgress from './studentProgress.js';
 // -------------------------
 // Relaciones
 // -------------------------
@@ -112,6 +113,16 @@ Resource.belongsTo(User, {
 });
 
 
+// Studen 1 - StudentProgress
+Student.hasOne(StudentProgress, {
+  foreignKey: 'student_id',
+  as: 'progress',
+});
+
+StudentProgress.belongsTo(Student, {
+  foreignKey: 'student_id',
+  as: 'student',
+});
 export {
   User,
   Role,
@@ -122,5 +133,6 @@ export {
   Student,
   StudentTutor,
   Tutor,
-  Resource
+  Resource,
+  StudentProgress
 };
