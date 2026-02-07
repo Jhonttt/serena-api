@@ -25,10 +25,7 @@ const Resource = sequelize.define('Resource', {
     type: DataTypes.STRING(100),
     allowNull: false,
   },
-  user_id: {
-    type: DataTypes.UUID,
-    allowNull: false,
-  },
+
 }, {
   tableName: 'resources',
   timestamps: true,

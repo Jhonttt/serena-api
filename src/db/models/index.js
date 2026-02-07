@@ -101,18 +101,6 @@ Student.belongsTo(User, {
 });
 
 
-// Usuario 1 - N Recursos
-User.hasMany(Resource, {
-  foreignKey: 'user_id',
-  as: 'resources',
-});
-
-Resource.belongsTo(User, {
-  foreignKey: 'user_id',
-  as: 'user',
-});
-
-
 // Studen 1 - StudentProgress
 Student.hasOne(StudentProgress, {
   foreignKey: 'student_id',

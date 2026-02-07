@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import sequelize from '../db/connection.js';
-import { Role, User, Student, StudentProgress } from '../db/models/index.js';
+import { Role, User, Student, StudentProgress,Resource} from '../db/models/index.js';
 
 const runSeed = async () => {
   try {
@@ -76,6 +76,82 @@ const runSeed = async () => {
   } catch (error) {
     console.error('❌ Seed error:', error);
   }
+
+  
+  // ========================
+  // 6️⃣ Crear recursos iniciales
+  // ========================
+  const resources = [
+    {
+      title: "Soledad, acoso e Ideación Suicida en adolescentes",
+      description: "Soledad no deseada y riesgo de ideación suicida en adolescentes víctimas de acoso, según Cirenia Quintana-Orts",
+      url: "https://www.ivoox.com/soledad-acoso-e-ideacion-suicida-adolescentes-audios-mp3_rf_106572234_1.html",
+      type_resource: "Audio",
+    },
+    {
+      title: "El cerebro, nuestro mejor aliado contra el estrés",
+      description: "Comprender es aliviar, y cuando comprendes por lo que pasa tu mente, te sientes aliviado; porque si no, eres esclavo de síntomas físicos, psicológicos y vas como perdido por la vida",
+      url: "https://www.youtube.com/watch?v=0noAwrWY78U",
+      type_resource: "Video",
+    },
+    {
+      title: "Cuatro pilares para una buena autoestima",
+      description: "‘A mi yo adolescente’ es un espacio en el que escucharemos la voz de los jóvenes y referentes destacados conversarán sobre autoestima",
+      url: "https://www.youtube.com/watch?v=mT8qVzEhiEA",
+      type_resource: "Video",
+    },
+    {
+      title: "Cómo combatir la ansiedad: Guía de técnicas esenciales",
+      description: "Guía con técnicas esenciales para manejar la ansiedad",
+      url: "https://www.areahumana.es/como-combatir-la-ansiedad/",
+      type_resource: "Video",
+    },
+    {
+      title: "Guía de auto ayuda: Mejora tu autoestima",
+      description: "Documento para fortalecer la autoestima personal",
+      url: "https://drive.google.com/file/d/1z3thtCKM80cmNBSLZ52AGJhDwBgZG9tn/view?usp=sharing",
+      type_resource: "Lectura",
+    },
+    {
+      title: "Guía de auto ayuda: Cómo hacer frente a las preocupacioness",
+      description: "Guía práctica para gestionar preocupaciones",
+      url: "https://drive.google.com/file/d/1q5-BD-1bbTh_UMrvE7QJ67ic-_wqSTPt/view?usp=sharing",
+      type_resource: "Lectura",
+    },
+    {
+      title: "Guía de auto ayuda: Qué puedo hacer para ayudarme si tengo depresión",
+      description: "Guía práctica para gestionar preocupaciones",
+      url: "https://drive.google.com/file/d/1q5-BD-1bbTh_UMrvE7QJ67ic-_wqSTPt/view?usp=sharing",
+      type_resource: 'Lectura',
+    },
+    {
+      title: "Gestionar el fracaso | 414",
+      description: "Gestionar el fracaso no es solo asumir que algo no salió como esperábamos; es enfrentarnos a la frustración, la vergüenza y a esa voz interna que cuestiona nuestro valor.",
+      url: "https://drive.google.com/file/d/1q5-BD-1bbTh_UMrvE7QJ67ic-_wqSTPt/view?usp=sharing",
+      type_resource: "https://www.ivoox.com/gestionar-fracaso-414-audios-mp3_rf_166708543_1.html",
+    },
+
+  ];
+
+for (const res of resources) {
+  const [resource, created] = await Resource.findOrCreate({
+    where: { url: res.url }, // busca por URL única
+    defaults: res,          // si no existe, crea con estos datos
+  });
+
+  //De igual forma asi evitamos el error de duplicados
+  if (!created) {
+    // Si ya existía, opcional: actualizar título o descripción
+    await resource.update({
+      title: res.title,
+      description: res.description,
+      type_resource: res.type_resource,
+    });
+  }
+}
+
+  console.log('✅ Seed completado correctamente');
+
 };
 
 export default runSeed;
