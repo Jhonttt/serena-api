@@ -12,35 +12,33 @@ import { authorizeRole } from "./middleware/authorizeRole.js";
 const app = express();
 
 // CORS CONFIG (OBLIGATORIO PARA LOGIN DESDE REACT)
-app.use(cors({
-  origin: 'http://localhost:5173', // frontend
-  // origin: 'https://app.proyectoserena.org', // frontend
-  credentials: true,               // permitir cookies
-}));
+app.use(
+  cors({
+    origin: "http://localhost:5173", // frontend
+    // origin: 'https://app.proyectoserena.org', // frontend
+    credentials: true, // permitir cookies
+  }),
+);
 
 app.set("port", PORT);
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(cookieParser());
 
-app.use('/api', authRoutes);
-app.use('/api/resources',resourceRoutes);
+app.use("/api", authRoutes);
+app.use("/api/resources", resourceRoutes);
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
 });
 
 // Ruta protegida con JWT
-app.get('/protected', authenticate, (req, res) => {
-  res.json({ message: 'Access granted', id: req.id });
+app.get("/protected", authenticate, (req, res) => {
+  res.json({ message: "Access granted", id: req.id });
 });
 
-app.get(
-  '/admin',
-  authenticate,
-  authorizeRole(['admin']), (req, res) => {
-    res.json({ message: 'Admin area' });
-  }
-);
+app.get("/admin", authenticate, authorizeRole(["admin"]), (req, res) => {
+  res.json({ message: "Admin area" });
+});
 
 export default app;

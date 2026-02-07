@@ -111,6 +111,18 @@ StudentProgress.belongsTo(Student, {
   foreignKey: 'student_id',
   as: 'student',
 });
+
+// Relación User - Resources
+User.hasMany(Resource, {
+  as: 'user',
+  foreignKey: 'user_id'
+});
+
+Resource.belongsTo(User, {
+  as: 'user',
+  foreignKey: 'user_id'
+})
+
 export {
   User,
   Role,

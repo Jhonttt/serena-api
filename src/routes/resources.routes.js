@@ -1,13 +1,28 @@
 import express from "express";
-import { createResource, getResources } from "../controllers/resources.controller.js";
-import { authenticate } from "../middleware/authMiddleware.js";
+import {
+  createResource,
+  getResources,
+  getResourceById,
+  updateResource,
+  deleteResource,
+} from "../controllers/resources.controller.js";
+import { authRequired } from "../middleware/validateToken.js";
 
 const router = express.Router();
 
-// Ruta para listar recursos
+// Obtener todos los recursos (público o protegido según tu preferencia)
 router.get("/", getResources);
 
-// Ruta para crear recursos (protegida)
-router.post("/", authenticate, createResource);
+// Crear recurso (requiere autenticación)
+router.post("/", authRequired, createResource);
+
+// Obtener recurso por ID
+router.get("/:id", getResourceById);
+
+// Actualizar recurso (requiere autenticación)
+router.put("/:id", authRequired, updateResource);
+
+// Eliminar recurso (requiere autenticación)
+router.delete("/:id", authRequired, deleteResource);
 
 export default router;
