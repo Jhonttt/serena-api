@@ -14,6 +14,15 @@ const Tutor = sequelize.define('Tutor', {
     allowNull: false,
   },
 
+  email_tutor: {
+      type: DataTypes.STRING(150),
+      allowNull: false,
+      unique: true,
+      validate: {
+        isEmail: true,
+      }
+    },
+
   phone: {
     type: DataTypes.STRING(12), //por si ponen +34
     allowNull: false,

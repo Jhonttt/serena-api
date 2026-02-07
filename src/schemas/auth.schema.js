@@ -48,32 +48,33 @@ export const registerSchema = z
       }),
     education_level: educationLevelSchema,
 
-    full_name: z.string().optional(),
-    phone: esPhone, // ✅ aquí usas el validador
+    full_name_tutor: z.string().optional(),
+    phone_tutor: esPhone, // ✅ aquí usas el validador
     relationship: relationshipSchema.optional(),
     psychological_issue: z.string().max(150).optional(),
+    email_tutor: z.email().optional(),
   })
   .superRefine((data, ctx) => {
     const age = calculateAge(data.birth_day);
 
     if (age < 18) {
-      // full_name obligatorio y con al menos un espacio
-      if (!data.full_name || data.full_name.trim() === "") {
+      // full_name_tutor obligatorio y con al menos un espacio
+      if (!data.full_name_tutor || data.full_name_tutor.trim() === "") {
         ctx.addIssue({
-          path: ["full_name"],
+          path: ["full_name_tutor"],
           message: "Nombre del tutor es obligatorio",
         });
-      } else if (!data.full_name.trim().includes(" ")) {
+      } else if (!data.full_name_tutor.trim().includes(" ")) {
         ctx.addIssue({
-          path: ["full_name"],
+          path: ["full_name_tutor"],
           message: "Nombre completo del tutor",
         });
       }
 
-      // phone obligatorio (y ya se valida formato por esPhone si viene)
-      if (!data.phone) {
+      // phone_tutor obligatorio (y ya se valida formato por esPhone si viene)
+      if (!data.phone_tutor) {
         ctx.addIssue({
-          path: ["phone"],
+          path: ["phone_tutor"],
           message: "Teléfono es obligatorio",
         });
       }

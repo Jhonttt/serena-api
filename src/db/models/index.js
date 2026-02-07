@@ -1,6 +1,6 @@
 import User from './user.model.js';
 import Role from './role.model.js';
-import Psychologist from './pyschologist.model.js';
+import Psychologist from './psychologist.js';
 import AccessLog from './accessLog.model.js';
 import Consent from './consent.model.js';
 import HealthBackground from './HealthBackground.model.js';

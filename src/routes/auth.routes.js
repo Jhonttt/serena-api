@@ -10,6 +10,7 @@ import { authRequired } from "../middleware/validateToken.js";
 import { validateSchema } from "../middleware/validator.middleware.js";
 import { registerSchema, loginSchema } from "../schemas/auth.schema.js";
 import { Student, User, Tutor, Role } from "../db/models/index.js";
+import { email } from "zod";
 
 const router = Router();
 
@@ -56,7 +57,7 @@ router.get("/student", authRequired, async (req, res) => {
         {
           model: Tutor,
           as: 'tutors',
-          attributes: ['id_tutor', 'full_name', 'phone', 'relationship'],
+          attributes: ['id_tutor', 'full_name', 'phone', 'relationship', 'email_tutor'],
           through: { 
             attributes: ['is_primary']
           },
@@ -91,6 +92,7 @@ router.get("/student", authRequired, async (req, res) => {
         full_name: tutor.full_name,
         phone: tutor.phone,
         relationship: tutor.relationship,
+        email_tutor: tutor.email_tutor,
         is_primary: tutor.StudentTutor?.is_primary || false
       })) || []
     };

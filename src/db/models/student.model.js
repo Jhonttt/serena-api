@@ -41,6 +41,11 @@ const Student = sequelize.define(
       type: DataTypes.STRING(50),
       allowNull: false,
     },
+
+    psychological_issue_hash: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    }
   },
   {
     tableName: "student",

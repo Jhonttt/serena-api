@@ -24,6 +24,7 @@ export const register = async (req, res) => {
 
     if (!parsed.success) {
       // extraemos todos los mensajes de error
+      await transaction.rollback();
       const errors = parsed.error.issues.map((i) => ({
         path: i.path.join("."),
         message: i.message,
@@ -39,23 +40,29 @@ export const register = async (req, res) => {
       last_name,
       birth_day,
       education_level,
-      full_name,
-      phone,
+      full_name_tutor,
+      phone_tutor,
       relationship,
       psychological_issue,
+      email_tutor
     } = parsed.data;
 
     /* =========================
        2. Comprobaciones previas
     ========================= */
     const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) return res.status(409).json(["Email ya registrado"]);
+    if (existingUser) {
+      await transaction.rollback();
+      return res.status(409).json(["Email ya registrado"]);
+    }
 
     const existingStudent = await Student.findOne({
       where: { first_name, last_name },
     });
-    if (existingStudent)
+    if (existingStudent) {
+      await transaction.rollback();
       return res.status(409).json(["Estudiante ya registrado"]);
+    }
 
     const studentRole = await Role.findOne({ where: { name: "student" } });
 
@@ -86,6 +93,11 @@ export const register = async (req, res) => {
     /* =========================
        6. Crear estudiante
     ========================= */
+    let psychologicalIssueHash= null;
+
+    if (psychological_issue) psychologicalIssueHash = await bcrypt.hash(psychological_issue, 10);
+
+
     const studentSaved = await Student.create(
       {
         user_id: userSaved.id,
@@ -94,6 +106,7 @@ export const register = async (req, res) => {
         birth_day,
         is_adult: isAdult,
         education_level,
+        psychological_issue_hash: psychologicalIssueHash
       },
       { transaction },
     );
@@ -102,11 +115,14 @@ export const register = async (req, res) => {
        7. Crear tutor si menor
     ========================= */
     if (!isAdult) {
-      const existingTutor = await Tutor.findOne({ where: { full_name } });
-      if (existingTutor) return res.status(409).json(["Tutor ya registrado"]);
+      const existingTutor = await Tutor.findOne({ where: { full_name: full_name_tutor } });
+      if (existingTutor) {
+        await transaction.rollback();
+        return res.status(409).json(["Tutor ya registrado"]);
+      }
 
       const tutorSaved = await Tutor.create(
-        { full_name, phone, relationship },
+        { full_name: full_name_tutor, email_tutor, phone: phone_tutor, relationship },
         { transaction },
       );
 
@@ -141,10 +157,19 @@ export const register = async (req, res) => {
 
     return res.status(201).json({
       message: "Usuario registrado correctamente",
+      token,
       user_id: userSaved.id,
+      user: {
+        id: userSaved.id,
+        email: userSaved.email,
+        role_id: userSaved.role_id,
+        role_name: studentRole.name,
+        first_name: first_name,
+        last_name: last_name,
+      },
     });
   } catch (error) {
-    await transaction.rollback();
+    if (!transaction.finished) await transaction.rollback();
     console.error(error);
     return res.status(500).json(["Error interno del servidor"]);
   }
