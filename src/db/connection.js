@@ -18,7 +18,9 @@ export const connectDB = async () => {
 
 export const syncDB = async () => {
   try {
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
     await sequelize.sync({ logging: false, force: true });
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
     console.log(">>> Models synced");
   } catch (error) {
     console.log(error);

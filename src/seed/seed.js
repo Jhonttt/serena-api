@@ -79,7 +79,7 @@ const runSeed = async () => {
       },
     });
 
-    // 6. ✅ Crear usuario estudiante menor de edad con tutor
+    // 8. ✅ Crear usuario estudiante menor de edad con tutor
     const [minorUser, createdMinor] = await User.findOrCreate({
       where: { email: "minor@serena.test" },
       defaults: {
@@ -89,7 +89,7 @@ const runSeed = async () => {
       },
     });
 
-    // Crear perfil de estudiante menor
+    // 9. Crear perfil de estudiante menor
     const [minorStudent, createdMinorStudent] = await Student.findOrCreate({
       where: { user_id: minorUser.id },
       defaults: {
@@ -101,7 +101,23 @@ const runSeed = async () => {
       },
     });
 
-    // ✅ Crear tutor para el estudiante menor
+    // ✅ 10. CREAR PROGRESO PARA MARÍA (ESTUDIANTE MENOR)
+    await StudentProgress.findOrCreate({
+      where: { student_id: minorStudent.id_student },
+      defaults: {
+        breathing_done: 0,
+        breathing_total: 10,
+        diary_done: 0,
+        diary_total: 20,
+        meditation_done: 0,
+        meditation_total: 20,
+        streak_days: 0,
+        sessions_completed: 0,
+        total_progress: 0,
+      },
+    });
+
+    // 11. ✅ Crear tutor para el estudiante menor
     const [tutor, createdTutor] = await Tutor.findOrCreate({
       where: { email_tutor: "tutor@serena.test" },
       defaults: {
@@ -112,7 +128,7 @@ const runSeed = async () => {
       },
     });
 
-    // ✅ Vincular estudiante con tutor
+    // 12. ✅ Vincular estudiante con tutor
     await StudentTutor.findOrCreate({
       where: {
         student_id: minorStudent.id_student,
@@ -128,84 +144,86 @@ const runSeed = async () => {
     console.log("📧 Student (adulto): student@serena.test / Student1234!");
     console.log("📧 Student (menor): minor@serena.test / Minor1234!");
     console.log("👤 Tutor: tutor@serena.test");
+
+    // ========================
+    // 13. Crear recursos iniciales
+    // ========================
+    const resources = [
+      {
+        title: "Soledad, acoso e Ideación Suicida en adolescentes",
+        description:
+          "Soledad no deseada y riesgo de ideación suicida en adolescentes víctimas de acoso, según Cirenia Quintana-Orts",
+        url: "https://www.ivoox.com/soledad-acoso-e-ideacion-suicida-adolescentes-audios-mp3_rf_106572234_1.html",
+        type_resource: "Audio",
+      },
+      {
+        title: "El cerebro, nuestro mejor aliado contra el estrés",
+        description:
+          "Comprender es aliviar, y cuando comprendes por lo que pasa tu mente, te sientes aliviado; porque si no, eres esclavo de síntomas físicos, psicológicos y vas como perdido por la vida",
+        url: "https://www.youtube.com/watch?v=0noAwrWY78U",
+        type_resource: "Video",
+      },
+      {
+        title: "Cuatro pilares para una buena autoestima",
+        description:
+          "'A mi yo adolescente' es un espacio en el que escucharemos la voz de los jóvenes y referentes destacados conversarán sobre autoestima",
+        url: "https://www.youtube.com/watch?v=mT8qVzEhiEA",
+        type_resource: "Video",
+      },
+      {
+        title: "Cómo combatir la ansiedad: Guía de técnicas esenciales",
+        description: "Guía con técnicas esenciales para manejar la ansiedad",
+        url: "https://www.areahumana.es/como-combatir-la-ansiedad/",
+        type_resource: "Lectura",
+      },
+      {
+        title: "Guía de auto ayuda: Mejora tu autoestima",
+        description: "Documento para fortalecer la autoestima personal",
+        url: "https://drive.google.com/file/d/1z3thtCKM80cmNBSLZ52AGJhDwBgZG9tn/view?usp=sharing",
+        type_resource: "Lectura",
+      },
+      {
+        title: "Guía de auto ayuda: Cómo hacer frente a las preocupaciones",
+        description: "Guía práctica para gestionar preocupaciones",
+        url: "https://drive.google.com/file/d/1q5-BD-1bbTh_UMrvE7QJ67ic-_wqSTPt/view?usp=sharing",
+        type_resource: "Lectura",
+      },
+      {
+        title:
+          "Guía de auto ayuda: Qué puedo hacer para ayudarme si tengo depresión",
+        description: "Consejos prácticos para la autoayuda en depresión",
+        url: "https://drive.google.com/file/d/1yKsNcoGTesibXG4Z-Jcr0o5M16Wl3TWq/view?usp=sharing",
+        type_resource: "Lectura",
+      },
+      {
+        title: "Gestionar el fracaso | 414",
+        description:
+          "Gestionar el fracaso no es solo asumir que algo no salió como esperábamos; es enfrentarnos a la frustración, la vergüenza y a esa voz interna que cuestiona nuestro valor.",
+        url: "https://www.ivoox.com/gestionar-fracaso-414-audios-mp3_rf_166708543_1.html",
+        type_resource: "Audio",
+      },
+    ];
+
+    for (const res of resources) {
+      const [resource, created] = await Resource.findOrCreate({
+        where: { url: res.url }, // busca por URL única
+        defaults: res, // si no existe, crea con estos datos
+      });
+
+      //De igual forma asi evitamos el error de duplicados
+      if (!created) {
+        // Si ya existía, opcional: actualizar título o descripción
+        await resource.update({
+          title: res.title,
+          description: res.description,
+          type_resource: res.type_resource,
+        });
+      }
+    }
+
+    console.log("✅ Recursos creados/actualizados correctamente");
   } catch (error) {
     console.error("❌ Seed error:", error);
-  }
-
-  // ========================
-  // 6️⃣ Crear recursos iniciales
-  // ========================
-  const resources = [
-    {
-      title: "Soledad, acoso e Ideación Suicida en adolescentes",
-      description:
-        "Soledad no deseada y riesgo de ideación suicida en adolescentes víctimas de acoso, según Cirenia Quintana-Orts",
-      url: "https://www.ivoox.com/soledad-acoso-e-ideacion-suicida-adolescentes-audios-mp3_rf_106572234_1.html",
-      type_resource: "Audio",
-    },
-    {
-      title: "El cerebro, nuestro mejor aliado contra el estrés",
-      description:
-        "Comprender es aliviar, y cuando comprendes por lo que pasa tu mente, te sientes aliviado; porque si no, eres esclavo de síntomas físicos, psicológicos y vas como perdido por la vida",
-      url: "https://www.youtube.com/watch?v=0noAwrWY78U",
-      type_resource: "Video",
-    },
-    {
-      title: "Cuatro pilares para una buena autoestima",
-      description:
-        "‘A mi yo adolescente’ es un espacio en el que escucharemos la voz de los jóvenes y referentes destacados conversarán sobre autoestima",
-      url: "https://www.youtube.com/watch?v=mT8qVzEhiEA",
-      type_resource: "Video",
-    },
-    {
-      title: "Cómo combatir la ansiedad: Guía de técnicas esenciales",
-      description: "Guía con técnicas esenciales para manejar la ansiedad",
-      url: "https://www.areahumana.es/como-combatir-la-ansiedad/",
-      type_resource: "Lectura",
-    },
-    {
-      title: "Guía de auto ayuda: Mejora tu autoestima",
-      description: "Documento para fortalecer la autoestima personal",
-      url: "https://drive.google.com/file/d/1z3thtCKM80cmNBSLZ52AGJhDwBgZG9tn/view?usp=sharing",
-      type_resource: "Lectura",
-    },
-    {
-      title: "Guía de auto ayuda: Cómo hacer frente a las preocupaciones",
-      description: "Guía práctica para gestionar preocupaciones",
-      url: "https://drive.google.com/file/d/1q5-BD-1bbTh_UMrvE7QJ67ic-_wqSTPt/view?usp=sharing",
-      type_resource: "Lectura",
-    },
-    {
-      title:
-        "Guía de auto ayuda: Qué puedo hacer para ayudarme si tengo depresión",
-      description: "Consejos prácticos para la autoayuda en depresión",
-      url: "https://drive.google.com/file/d/1yKsNcoGTesibXG4Z-Jcr0o5M16Wl3TWq/view?usp=sharing",
-      type_resource: "Lectura",
-    },
-    {
-      title: "Gestionar el fracaso | 414",
-      description:
-        "Gestionar el fracaso no es solo asumir que algo no salió como esperábamos; es enfrentarnos a la frustración, la vergüenza y a esa voz interna que cuestiona nuestro valor.",
-      url: "https://www.ivoox.com/gestionar-fracaso-414-audios-mp3_rf_166708543_1.html",
-      type_resource: "Audio",
-    },
-  ];
-
-  for (const res of resources) {
-    const [resource, created] = await Resource.findOrCreate({
-      where: { url: res.url }, // busca por URL única
-      defaults: res, // si no existe, crea con estos datos
-    });
-
-    //De igual forma asi evitamos el error de duplicados
-    if (!created) {
-      // Si ya existía, opcional: actualizar título o descripción
-      await resource.update({
-        title: res.title,
-        description: res.description,
-        type_resource: res.type_resource,
-      });
-    }
   }
 };
 

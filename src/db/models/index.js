@@ -8,7 +8,7 @@ import StudentTutor from './studentTutor.model.js';
 import Student from './student.model.js';
 import Tutor from './tutor.model.js';
 import Resource from './resources.js';
-import StudentProgress from './studentProgress.js';
+import StudentProgress from './studentProgress.model.js';
 // -------------------------
 // Relaciones
 // -------------------------
