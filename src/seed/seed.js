@@ -89,6 +89,7 @@ const runSeed = async () => {
       },
     });
 
+    // 9. Crear perfil de estudiante menor
     // 9. ✅ Crear perfil de estudiante menor
     const [minorStudent, createdMinorStudent] = await Student.findOrCreate({
       where: { user_id: minorUser.id },
@@ -101,7 +102,23 @@ const runSeed = async () => {
       },
     });
 
-    // 10. ✅ Crear tutor para el estudiante menor
+    // ✅ 10. CREAR PROGRESO PARA MARÍA (ESTUDIANTE MENOR)
+    await StudentProgress.findOrCreate({
+      where: { student_id: minorStudent.id_student },
+      defaults: {
+        breathing_done: 0,
+        breathing_total: 10,
+        diary_done: 0,
+        diary_total: 20,
+        meditation_done: 0,
+        meditation_total: 20,
+        streak_days: 0,
+        sessions_completed: 0,
+        total_progress: 0,
+      },
+    });
+
+    // 11. ✅ Crear tutor para el estudiante menor
     const [tutor, createdTutor] = await Tutor.findOrCreate({
       where: { email_tutor: "tutor@serena.test" },
       defaults: {
@@ -112,7 +129,7 @@ const runSeed = async () => {
       },
     });
 
-    // 11. ✅ Vincular estudiante con tutor
+    // 12. ✅ Vincular estudiante con tutor
     await StudentTutor.findOrCreate({
       where: {
         student_id: minorStudent.id_student,

@@ -5,19 +5,22 @@ import {
   logout,
   profile,
   verifyToken,
+  updatePersonalInfo,
+  changePassword,
+  updatePreferences,
+  deactivateAccount,
 } from "../controllers/auth.controller.js";
 import { authRequired } from "../middleware/validateToken.js";
 import { validateSchema } from "../middleware/validator.middleware.js";
 import { registerSchema, loginSchema } from "../schemas/auth.schema.js";
 import { Student, User, Tutor, Role } from "../db/models/index.js";
-import { email } from "zod";
 
 const router = Router();
 
+// ========== Autenticación ==========
 router.post("/register", validateSchema(registerSchema), register);
 router.post("/login", validateSchema(loginSchema), login);
 router.post("/logout", logout);
-
 router.get("/verify", verifyToken);
 router.get("/profile", authRequired, profile);
 
@@ -63,7 +66,7 @@ router.get("/home", authRequired, async (req, res) => {
   }
 });
 
-
+// ========== Obtener perfiles ==========
 // Extraemos los datos del estudiante con tutores
 router.get("/student", authRequired, async (req, res) => {
   try {
@@ -230,5 +233,20 @@ router.get("/user/:id", authRequired, async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
+// ========== Settings - Actualizar información ==========
+
+// Actualizar información personal
+router.put("/user/update-personal", authRequired, updatePersonalInfo);
+
+// Cambiar contraseña
+router.put("/user/change-password", authRequired, changePassword);
+
+// Actualizar preferencias
+router.put("/user/preferences", authRequired, updatePreferences);
+
+// Desactivar cuenta
+router.put("/user/deactivate", authRequired, deactivateAccount);
+
 
 export default router;

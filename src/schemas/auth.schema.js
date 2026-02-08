@@ -97,3 +97,62 @@ export const loginSchema = z.object({
     required_error: "Password is required",
   }),
 });
+
+export const updatePersonalInfoSchema = z.object({
+  first_name: z
+    .string()
+    .min(2, "El nombre debe tener al menos 2 caracteres")
+    .max(50, "El nombre no puede exceder 50 caracteres")
+    .optional()
+    .or(z.literal("")),
+
+  last_name: z
+    .string()
+    .min(2, "El apellido debe tener al menos 2 caracteres")
+    .max(50, "El apellido no puede exceder 50 caracteres")
+    .optional()
+    .or(z.literal("")),
+
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
+
+  birth_day: z
+    .string()
+    .optional()
+    .refine(
+      (val) => {
+        if (!val) return true; // si es opcional y está vacío, pasa
+        const age = calculateAge(val);
+        return age >= 5 && age <= 120;
+      },
+      { message: "La edad mínima es 12 años" },
+    )
+    .refine(
+      (val) => {
+        if (!val) return true;
+        const selected = new Date(val);
+        const today = new Date();
+        return selected < today;
+      },
+      { message: "La fecha no puede ser futura" },
+    ),
+
+  education_level: educationLevelSchema.optional(),
+});
+
+export const changePasswordSchema = z.object({
+  current_password: z
+    .string({
+      required_error: "La contraseña actual es obligatoria",
+    })
+    .min(1, "La contraseña actual es obligatoria"),
+
+  new_password: z
+    .string({
+      required_error: "La nueva contraseña es obligatoria",
+    })
+    .min(8, "La contraseña debe tener al menos 8 caracteres")
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      "Debe incluir mayúsculas, minúsculas y números",
+    ),
+});
