@@ -215,13 +215,13 @@ export const login = async (req, res) => {
       ],
     });
     if (!userFound || !userFound.is_active)
-      return res.status(401).json(["Email is not valid"]);
+      return res.status(401).json(["Credenciales incorrectas"]);
 
     const passwordValid = await bcrypt.compare(
       password,
       userFound.password_hash,
     );
-    if (!passwordValid) return res.status(401).json(["Invalid password"]);
+    if (!passwordValid) return res.status(401).json(["Credenciales incorrectas"]);
 
     const token = await createAccessToken({
       id: userFound.id,
@@ -235,7 +235,7 @@ export const login = async (req, res) => {
     });
 
     return res.json({
-      message: "Login successful",
+      message: "Login correcto",
       token,
       user: {
         id: userFound.id,
@@ -261,7 +261,7 @@ export const logout = async (req, res) => {
       secure: false,
     });
 
-    return res.json({ message: "Logout successful" });
+    return res.json({ message: "Logout correcto" });
   } catch (error) {
     console.error(error);
     return res.status(500).json(["Internal server error"]);

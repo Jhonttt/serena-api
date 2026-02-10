@@ -21,27 +21,29 @@ const relationshipSchema = z.enum(
 
 export const registerSchema = z
   .object({
-    email: z.email({
-      required_error: "Email is required",
-    }),
+    email: z
+      .string({
+        required_error: "El email es obligatorio",
+      })
+      .email("Email inválido"), // ✅ CORRECTO: string().email()
     password: z
       .string({
-        required_error: "Password is required",
+        required_error: "La contraseña es obligatoria",
       })
       .min(8, "La contraseña debe tener al menos 8 caracteres"),
     first_name: z
       .string({
-        required_error: "First name is required",
+        required_error: "El nombre es obligatorio",
       })
-      .min(1, "First name cannot be empty"),
+      .min(1, "No puede estar vacío"),
     last_name: z
       .string({
-        required_error: "Last name is required",
+        required_error: "El apellido es obligatorio",
       })
-      .min(1, "Last name cannot be empty"),
+      .min(1, "No puede estar vacío"),
     birth_day: z
       .string({
-        required_error: "Birth date is required",
+        required_error: "El cumpleaños es obligatorio",
       })
       .refine((val) => calculateAge(val) >= 12, {
         message: "La edad mínima es 12 años",
@@ -52,7 +54,7 @@ export const registerSchema = z
     phone_tutor: esPhone, // ✅ aquí usas el validador
     relationship: relationshipSchema.optional(),
     psychological_issue: z.string().max(150).optional(),
-    email_tutor: z.email().optional(),
+    aemil_tutor: z.email().optional(),
   })
   .superRefine((data, ctx) => {
     const age = calculateAge(data.birth_day);
@@ -90,11 +92,11 @@ export const registerSchema = z
   });
 
 export const loginSchema = z.object({
-  email: z.email({
-    required_error: "Email is required",
-  }),
+  email: z.string({
+    required_error: "Credenciales invalidas",
+  }).email("Credenciales inválidas"),
   password: z.string({
-    required_error: "Password is required",
+    required_error: "Credenciales invalidas",
   }),
 });
 
